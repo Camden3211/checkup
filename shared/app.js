@@ -297,8 +297,14 @@
       .slice(0, A.results.maxFocusAreas || 3);
     const strengths = rows.filter((row) => row.status === 'good' && row.q.strength).sort(byPriority).slice(0, 2);
 
-    const multi = questions.find((q) => q.type === 'multi');
-    const timing = multi ? (state.answers[multi.id] || []).map((i) => multi.options[i]).filter((o) => o.callout).slice(0, 2) : [];
+    // "Timing matters" notes: any picked answer with a `callout`, in question order, max 2
+    const timing = [];
+    questions.forEach((q) => {
+      const a = state.answers[q.id];
+      const picked = q.type === 'multi' ? (a || []).map((i) => q.options[i]) : q.options[a] ? [q.options[a]] : [];
+      picked.forEach((o) => o.callout && timing.push(o));
+    });
+    timing.splice(2);
 
     const topQ = questions.find((q) => q.id === 'topQuestion');
     let topQuestion = '';
