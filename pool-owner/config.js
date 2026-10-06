@@ -67,6 +67,32 @@ window.ASSESSMENT = {
       strength: 'You know your retirement number and keep track of it.',
     },
     {
+      // Not scored. It's a timeline, not right or wrong. It feeds the "Timing matters" box.
+      id: 'horizon',
+      short: 'Work optional by',
+      unscored: true,
+      text: 'When would you like work to become optional?',
+      options: [
+        {
+          label: 'Within 5 years',
+          callout:
+            "You'd like work to be optional within 5 years. That's not a lot of runway, so the decisions you make in the next year or two will carry more weight than usual.",
+        },
+        {
+          label: '5–10 years',
+          callout:
+            "You'd like work to be optional in 5 to 10 years. That's enough time to change the outcome, if the plan starts now rather than in a few years.",
+        },
+        { label: '10–20 years' },
+        { label: '20+ years' },
+        {
+          label: "I haven't really thought about it",
+          callout:
+            "You haven't picked a date for when work becomes optional. Almost everything else, from how much to save to what the business needs to sell for, depends on that one answer.",
+        },
+      ],
+    },
+    {
       id: 'concentration',
       short: 'Net worth in business',
       area: 'Wealth outside the business',
@@ -162,25 +188,6 @@ window.ASSESSMENT = {
       },
       strength: 'Your investments have a defined strategy that you review.',
     },
-    {
-      id: 'proactive',
-      short: 'Planning timing',
-      area: 'Planning ahead vs. after the fact',
-      priority: 7,
-      text: 'When do big tax, retirement and investment decisions usually get made?',
-      options: [
-        { label: 'During the year, on purpose', status: 'good' },
-        { label: 'Some during the year, some at tax time', status: 'partial' },
-        { label: 'Mostly at tax time, after the fact', status: 'gap' },
-        { label: "They don't really get made", status: 'gap' },
-      ],
-      focus: {
-        body:
-          "By the time your tax return is being prepared, most of the decisions that affect it are already locked in. Retirement contributions, the timing of big purchases and how money comes out of the business are all worth deciding during the year, with your CPA in the loop.",
-        question: 'Which decisions should you be making before December 31 this year?',
-      },
-      strength: 'You make tax and retirement decisions during the year, not after it.',
-    },
 
     // ---- Not scored: only you see these (Sheet + email). They size the opportunity. ----
     {
@@ -231,9 +238,9 @@ window.ASSESSMENT = {
     // ---- Not scored: used for the "Timing matters" box and for your follow-up ----
     {
       id: 'changes',
-      short: 'Big changes (3-5 yrs)',
+      short: 'Big changes ahead',
       type: 'multi',
-      text: 'Is anything big likely in the next 3 to 5 years?',
+      text: 'Are any big financial changes on your radar over the next few years?',
       help: 'Pick all that apply.',
       options: [
         {
@@ -274,7 +281,7 @@ window.ASSESSMENT = {
         { label: 'What should I be doing beyond my IRA?' },
         { label: 'What should I do with extra cash in the business?' },
         { label: 'Is too much of my wealth tied up in the business?' },
-        { label: 'What does my business need to sell for?' },
+        { label: 'What does my business need to sell for to fund my retirement lifestyle?' },
         { label: 'What should I do with the investments I already have?' },
         { label: 'Am I paying more in taxes than I need to?' },
         { label: 'Something else', other: true, placeholder: "What's on your mind?" },
