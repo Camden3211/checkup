@@ -135,8 +135,12 @@
   function contactScreen() {
     const c = A.contact;
     const v = state.contact;
+    const followOptions = c.followUpOptions || [
+      { value: 'Yes', label: c.followUpYes },
+      { value: 'No', label: c.followUpNo },
+    ];
     const follow = (val, label) =>
-      `<button type="button" class="option" data-action="follow" data-value="${val}" aria-pressed="${v.followUp === val}">
+      `<button type="button" class="option" data-action="follow" data-value="${esc(val)}" aria-pressed="${v.followUp === val}">
          <span class="option-label">${esc(label)}</span><span class="tick" aria-hidden="true"></span>
        </button>`;
     return `
@@ -156,10 +160,9 @@
           </div>
           <p class="field-question" id="follow-q">${esc(c.followUpQuestion)}</p>
           <div class="options" role="group" aria-labelledby="follow-q">
-            ${follow('yes', c.followUpYes)}
-            ${follow('no', c.followUpNo)}
+            ${followOptions.map((o) => follow(o.value, o.label)).join('')}
           </div>
-          <div class="reveal" data-reveal ${v.followUp === 'yes' ? '' : 'hidden'}>
+          <div class="reveal" data-reveal ${v.followUp === 'Yes' ? '' : 'hidden'}>
             <p class="reveal-note">${esc(c.reachNote)}</p>
             <div class="fields">
               <div class="field">
@@ -224,7 +227,8 @@
          <ul class="strengths">${r.strengths.map((row) => `<li>${esc(row.q.strength)}</li>`).join('')}</ul>`
       : '';
 
-    const wantsFollowUp = state.contact.followUp === 'yes';
+    const wantsFollowUp = state.contact.followUp === 'Yes';
+    const ctaText = wantsFollowUp ? R.ctaYes : state.contact.followUp === 'Maybe' && R.ctaMaybe ? R.ctaMaybe : R.ctaNo;
     const topQ = r.topQuestion ? esc(fill(wantsFollowUp ? R.ctaYesTopQuestion : R.ctaNoTopQuestion, { q: r.topQuestion })) : '';
     const reach = [
       advisor.phone ? `<a href="tel:${esc(advisor.phone.replace(/[^\d+]/g, ''))}">${esc(advisor.phone)}</a>` : '',
@@ -234,7 +238,7 @@
       .join(' · ');
     const cta = `
       <aside class="cta">
-        <p>${esc(fill(wantsFollowUp ? R.ctaYes : R.ctaNo, { name: name || 'there' }))}</p>
+        <p>${esc(fill(ctaText, { name: name || 'there' }))}</p>
         ${topQ ? `<p>${topQ}</p>` : ''}
         ${!wantsFollowUp && reach ? `<p class="reach">${esc(advisor.name || '')}<br>${reach}</p>` : ''}
         <p class="signoff">${esc(R.signoff)}</p>
@@ -319,7 +323,7 @@
   // ---------- saving to Google Sheets ----------
   function buildPayload(r, honeypot) {
     const c = state.contact;
-    const yes = c.followUp === 'yes'; // email/phone are only kept if they asked for follow-up
+    const yes = c.followUp === 'Yes'; // email/phone are only kept if they asked for follow-up
     const p = {
       Assessment: A.id,
       Source: state.source,
@@ -328,7 +332,7 @@
       Email: yes ? c.email.trim() : '',
       Phone: yes ? c.phone.trim() : '',
       'OK to text': yes && c.okToText ? 'Yes' : 'No',
-      'Wants follow-up': yes ? 'Yes' : 'No',
+      'Wants follow-up': c.followUp, // Yes / Maybe / No
       Result: r.verdict.title,
       'On track': r.counts.good,
       'Worth a look': r.counts.partial,
@@ -422,8 +426,8 @@
   function contactError() {
     const c = state.contact;
     if (!c.firstName || !c.lastName) return 'Please add your first and last name.';
-    if (!c.followUp) return 'Pick whether you want me to look over your results.';
-    if (c.followUp !== 'yes') return ''; // email/phone aren't asked for unless they said yes
+    if (!c.followUp) return 'Pick one of the options above.';
+    if (c.followUp !== 'Yes') return ''; // email/phone aren't asked for unless they said yes
     if (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) return "That email doesn't look quite right.";
     if (c.okToText && !c.phone) return 'Add a phone number, or uncheck the text option.';
     return '';
@@ -441,7 +445,7 @@
     else if (action === 'follow') {
       state.contact.followUp = el.dataset.value;
       app.querySelectorAll('[data-action="follow"]').forEach((b) => b.setAttribute('aria-pressed', String(b === el)));
-      app.querySelector('[data-reveal]').hidden = state.contact.followUp !== 'yes';
+      app.querySelector('[data-reveal]').hidden = state.contact.followUp !== 'Yes';
     } else if (action === 'print') window.print();
     else if (action === 'restart') {
       state = freshState();
