@@ -292,10 +292,15 @@ window.ASSESSMENT = {
   // Shown on the last screen before results.
   contact: {
     heading: 'Last step',
-    followUpQuestion: 'Want me to look over your results personally?',
-    followUpYes: "Yes, tell me the 1 or 2 things you'd look at first",
-    followUpNo: 'Not right now. Just show me my results',
-    reachNote: "Want me to reach you directly? Add an email or phone. Both are optional.",
+    followUpQuestion: "Would you like me to personally look at your answers and send you the one thing I'd investigate first?",
+    // value is what shows in the Sheet's "Wants follow-up" column. Only 'Yes' shows the email/phone boxes.
+    followUpOptions: [
+      { value: 'Yes', label: 'Yes, send me your take' },
+      { value: 'Maybe', label: 'Maybe. I just want my results for now' },
+      { value: 'No', label: 'No thanks' },
+    ],
+    reachNote:
+      "Where should I send it? Add an email or phone, or leave both blank and I'll message you the same way you got this link.",
     textConsent: "It's OK to text me about my results at this number.",
     privacyNote: "I'll only use this to follow up on your checkup. No mailing list, and I don't share your info.",
     button: 'See my results',
@@ -337,9 +342,12 @@ window.ASSESSMENT = {
       "Nothing jumped out as a gap. The next step is coordination: making sure your business, investments, taxes and exit plan are all aimed at the same target.",
     strengthsHeading: "What you're doing well",
     timingHeading: 'Timing matters',
+    // What they see at the bottom of their results, based on their answer on the last step
     ctaYes:
-      "Thanks, {name}. I'll go through your answers personally and reach out in the next day or two with the 1 or 2 things I'd look at first.",
-    ctaYesTopQuestion: 'I\'ll start with your question: "{q}"',
+      "Thanks, {name}. I'll go through your answers personally and send you the one thing I'd look into first, usually within a day or two.",
+    ctaYesTopQuestion: 'I\'ll keep your question in mind: "{q}"',
+    ctaMaybe:
+      "Sounds good, {name}. Look these over first. If you want my take later, just reply to the message I sent you and I'll send it over.",
     ctaNo:
       "No problem. Save or print this page and use it as a checklist. If you want a second set of eyes later, I'm easy to reach.",
     ctaNoTopQuestion: 'You said the question you most want answered is "{q}" That one is worth getting a real answer to.',
