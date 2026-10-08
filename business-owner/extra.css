@@ -1,0 +1,24 @@
+/* Business Owner checkup only: score card and a few additions on top of ../shared/styles.css */
+
+.intro .eyebrow { margin-bottom: 14px; }
+.intro h1 { font-size: clamp(27px, 6.6vw, 34px); }
+
+.score-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 20px 18px 22px; margin-bottom: 8px;
+}
+.score-label {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+.score { display: flex; align-items: baseline; gap: 4px; margin: 2px 0 12px; font-variant-numeric: tabular-nums; }
+.score b { font-size: 60px; line-height: 1; font-weight: 750; letter-spacing: -0.03em; color: var(--accent); }
+.score span { font-size: 22px; font-weight: 650; color: var(--muted); }
+.score-bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-bottom: 20px; }
+.score-bar div { height: 100%; border-radius: 4px; background: var(--accent); }
+.results .score-card h1 { margin-bottom: 8px; }
+.results .score-card .lede { margin-bottom: 0; }
+
+.strengths li span { display: grid; gap: 2px; }
+.strengths li b { font-weight: 700; }
+
+.results .timing { margin-top: 8px; }
