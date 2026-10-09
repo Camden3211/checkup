@@ -14,7 +14,7 @@ window.SETTINGS = {
     name: 'Camden Hardy',
     shortName: 'Cam',
     phone: '602-299-6691',
-    email: 'camden.hardy@lpl.com',
+    email: 'cam@trelliswm.com',
   },
 
   // Paste your firm-required disclosure text here (shown at the bottom of every page).

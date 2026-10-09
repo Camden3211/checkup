@@ -16,6 +16,9 @@ Cost: $0/month (GitHub Pages + Google Sheets).
 | `pool-owner/index.html` | The page itself | No |
 | `shared/app.js`, `shared/styles.css` | The engine and the look, shared by every checkup | No |
 | `index.html` | Sends the main link to the pool checkup | No |
+| `business-owner/config.js` | Every question, answer, score band and result message for the business owner checkup | **Yes**, whenever you want to change wording |
+| `business-owner/opportunities.js` | Private lead scoring for the business owner checkup (tags, A+/A/B/C, follow-up angle) | Only to change how leads are scored |
+| `business-owner/app.js`, `extra.css`, `index.html` | The business owner checkup's own engine and page. The pool checkup never loads these | No |
 
 ---
 
@@ -69,8 +72,8 @@ Use `?name=` for everyone you message personally. It makes the page feel like it
 ## Your Google Sheet
 
 - One row per person who finishes. Each checkup gets its own tab.
-- **First/Last name**: required for everyone. Email and phone are only asked for, and only saved, if they tap **Yes** to follow-up, and even then they're optional.
-- **Wants follow-up**: Yes means they asked you to look at their results. Reach out to them first.
+- **First/Last name**: required for everyone. Email and phone are only asked for, and only saved, if they tap **Yes, send me your take**, and even then they're optional.
+- **Wants follow-up**: **Yes** = they asked for your take on the one thing you'd look into first, so send it. **Maybe** = they wanted their results first; a light check-in later is fair. **No** = leave it.
 - **Invested outside business / Investments managed by / Extra business cash**: the sizing questions. Only you see these. They never show on the owner's results. They're also in the subject line of your email alert, e.g. `Checkup: Dave Jones · $500,000 – $1 million · I manage them myself · biz cash $150,000 – $300,000 (WANTS FOLLOW-UP)`.
 - **Focus 1–3**: the areas their results flagged. Lead with these when you follow up.
 - **Top question**: what they most want answered. This is also good material for Facebook posts.
@@ -83,8 +86,8 @@ Use `?name=` for everyone you message personally. It makes the page feel like it
 
 Each answer is marked **On track**, **Worth a look**, or **Gap** in `pool-owner/config.js` (`status: 'good' | 'partial' | 'gap'`). The results page shows:
 1. A headline based on how many open items they have (the `verdicts` section).
-2. A tally and a checklist of all 8 areas.
-3. A **Timing matters** box if they picked selling, retiring, etc. in the "anything big" question.
+2. A tally and a checklist of all 7 areas.
+3. A **Timing matters** box (up to 2 notes) if they said work should be optional within 10 years or they haven't thought about it, or picked selling, retiring, etc. in the "big changes" question.
 4. **Where I'd look first**: their top 3 gaps, each with their own answer quoted back to them and "the question to answer." Gaps come before "worth a look." Ties go by `priority` (lower number shows first).
 5. What they're doing well, then your note.
 
@@ -92,14 +95,32 @@ No numbers or scores are shown, just their own answers organized so the gaps are
 
 ---
 
+## Business Owner checkup
+Live link once uploaded: `https://camden3211.github.io/checkup/business-owner/` (same `?name=` and `?src=` options). Answers go to a **business-owner** tab in the same Sheet, created on the first submission. The Apps Script doesn't need any changes.
+
+How it differs from the pool checkup:
+- It shows a **score out of 100** (Q3–Q7, 4 points each), a result band, their 1–2 strongest areas and their 2 lowest.
+- Two follow-up questions only appear for certain answers: how much cash sits in the business (if it "mostly accumulates") and when the 401(k) was last reviewed (if they have a company 401(k)). Both keep the same "Question X of 9" number.
+- Private lead scoring in `opportunities.js` adds these Sheet columns: **Hidden Lead Priority** (A+/A/B/C), **Follow-Up Angle**, **Opportunity Tags**, **AUM Points**, and one column per opportunity (AUM, Planning, Retirement Plan, 401(k) Review, Excess Cash, Money In Motion, Exit Planning). Each reads `LEVEL · why`. Filter a column with "Text starts with" HIGH to find the best leads.
+- Their top question is right after their contact info in the Sheet and the email alert.
+- It has its own engine (`business-owner/app.js`) on purpose, so changes to it can never affect the pool checkup. `shared/styles.css` and `settings.js` are still shared.
+
+**To upload:** drag the whole `business-owner` folder into the repo (Add file → Upload files). Nothing else needs to change.
+
 ## Adding another checkup later (Contractor, Realtor, etc.)
 1. Copy the `pool-owner` folder and rename it, e.g. `contractor`.
-2. In the new `config.js`, change `id` to `'contractor'` and rewrite the wording.
+2. In the new `config.js`, change `id` to `'contractor'` and rewrite the wording. (Copy `business-owner` instead if you want the score and lead-scoring version.)
 3. Upload the new folder. The link is `.../checkup/contractor/` and the answers go to their own **contractor** tab automatically.
 
 ---
 
 ## Changelog
+- **2026-10-08**: Business Owner Q5 is now pick-all-that-apply ("Which of these are you currently using for retirement?"), scored by the single best answer.
+- **2026-10-08**: Contact email on both checkups' results pages changed to cam@trelliswm.com (`settings.js`).
+- **2026-10-08**: Added the Business Owner checkup in `business-owner/`: 9 questions plus 2 follow-ups, a 0–100 score, private lead scoring and a follow-up angle. No shared files changed.
+- **2026-10-07**: Last step is now "Would you like me to personally look at your answers and send you the one thing I'd investigate first?" with Yes / Maybe / No. Sheet shows Yes, Maybe or No. Apps Script tags Maybe as (MAYBE) in the email subject (needs a new deployment version to take effect).
+- **2026-10-06**: Added "When would you like work to become optional?" after the retirement-number question (feeds Timing matters). Removed the "When do big tax, retirement and investment decisions get made?" question. Reworded big-changes question to "Are any big financial changes on your radar over the next few years?" (Sheet column renamed "Big changes ahead").
+- **2026-10-06**: Reworded "big changes" question to "Are any of these likely to happen in the next 3 to 5 years?" and top-question option to "...sell for to fund my retirement lifestyle?"
 - **2026-10-05**: Added 3 private sizing questions (investable assets, who manages them incl. advisor satisfaction, extra business cash), each with "Prefer not to say" where sensitive. Shown in Sheet + email subject only.
 - **2026-10-05**: Last step now asks only for first + last name and yes/no. Email/phone fields appear only after tapping Yes, and are optional.
 - **2026-10-05**: V1. 8 checkup questions + "big changes" + "top question," personal follow-up choice, results page, Google Sheet saving, email alerts, `?name=` and `?src=` links.
