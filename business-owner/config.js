@@ -7,6 +7,7 @@
     `points` = 0–4 toward their public score (only on the 5 scored questions).
 
   On every scored question (the ones with a `category`):
+    A pick-all-that-apply question scores only its single best answer. Points are never added together.
     `priority` breaks ties when picking which areas to show first (lower number = shown first).
     `focus`    = shown under "Areas worth a closer look". An answer can have its own `body` to replace focus.body.
     `strength` = shown under "What you're doing well". An answer can have its own `strength`.
@@ -22,6 +23,9 @@ window.ASSESSMENT = {
   id: 'business-owner', // also the name of the tab in your Google Sheet
 
   title: 'Business Owner Financial Checkup',
+  // Your name, phone and email come from settings.js (shared with the pool checkup).
+  // To show something different on this checkup only, add e.g. advisor: { email: '...' } here.
+
   intro: {
     hook: 'Is your business actually building your personal wealth, or just keeping you busy?',
     subtext:
@@ -143,29 +147,40 @@ window.ASSESSMENT = {
     },
     {
       id: 'retirementPlan',
-      short: 'Q5 Retirement Setup',
+      short: 'Q5 Retirement Setup', // the Sheet gets every box they ticked
       category: 'Retirement structure',
       priority: 4,
-      text: 'What retirement setup does your business currently have?',
+      type: 'multi', // scores their single best answer, e.g. IRA + SEP = 3 points, not 4
+      text: 'Which of these are you currently using for retirement?',
+      help: 'Select all that apply.',
       options: [
-        { key: 'cashBalance', label: '401(k) plus cash balance / pension-style plan', points: 4 },
-        { key: 'company401k', label: 'Company 401(k)', points: 4 },
+        { key: 'ira', label: 'Traditional or Roth IRA personally', points: 1 },
         { key: 'solo401k', label: 'Solo 401(k)', points: 4 },
         {
-          key: 'sepSimple',
-          label: 'SEP or SIMPLE IRA',
+          key: 'sep',
+          label: 'SEP IRA',
           points: 3,
           body:
             "SEP and SIMPLE IRAs are easy to run, but they aren't always the best fit as income grows or the team changes. Depending on your income and whether you have employees, a different setup may let you put away more.",
         },
-        { key: 'ira', label: 'Mainly an IRA personally', points: 1 },
-        { key: 'none', label: 'No retirement plan through the business', points: 0 },
+        {
+          key: 'simple',
+          label: 'SIMPLE IRA',
+          points: 3,
+          body:
+            "SEP and SIMPLE IRAs are easy to run, but they aren't always the best fit as income grows or the team changes. Depending on your income and whether you have employees, a different setup may let you put away more.",
+        },
+        { key: 'company401k', label: 'Company 401(k)', points: 4 },
+        { key: 'cashBalance', label: 'Cash balance / defined benefit plan', points: 4 },
+        // `exclusive` answers clear every other box, and ticking any other box clears them
+        { key: 'none', label: 'Nothing right now', points: 0, exclusive: true },
         {
           key: 'unsure',
           label: "I'm not sure",
           points: 0,
+          exclusive: true,
           body:
-            "If you're not sure what the business has, it's worth finding out. The setup you use affects how much you can put away each year and how that money is taxed.",
+            "If you're not sure what you're using, it's worth finding out. The setup you use affects how much you can put away each year and how that money is taxed.",
         },
       ],
       focus: {
@@ -176,10 +191,11 @@ window.ASSESSMENT = {
       strength: "You're saving for retirement through the business, not just around it.",
     },
     {
-      // Private follow-up. Only asked if they have a company 401(k). Doesn't affect the score.
+      // Private follow-up. Only asked if they ticked Company 401(k) (with or without a cash balance plan).
+      // Doesn't affect the score.
       id: 'planReview',
       short: 'Conditional 401(k) Review Answer',
-      showIf: { question: 'retirementPlan', answers: ['company401k', 'cashBalance'] },
+      showIf: { question: 'retirementPlan', answers: ['company401k'] },
       text: "When was the last time someone independently reviewed your plan's fees, investments and plan design?",
       options: [
         { key: 'lastYear', label: 'Within the last year' },

@@ -66,14 +66,19 @@ window.LEAD_SCORING = function (a) {
   const bigCash = !!cash && cash.level === 'HIGH';
   const someCash = !!cash && cash.level !== 'LOW';
 
-  // ---------- Retirement plan (Q5) ----------
-  const plan = a.key('retirementPlan');
+  // ---------- Retirement plan (Q5, pick all that apply) ----------
+  const plan = (k) => a.has('retirementPlan', k);
+  const has401kType = plan('company401k') || plan('solo401k') || plan('cashBalance');
+  const sepSimpleOnly = (plan('sep') || plan('simple')) && !has401kType; // a personal IRA alongside is fine
+  const iraOnly = plan('ira') && !has401kType && !plan('sep') && !plan('simple');
+  const sepSimpleText = plan('sep') && plan('simple') ? 'SEP and SIMPLE IRA' : plan('sep') ? 'SEP IRA' : 'SIMPLE IRA';
   let retirementPlan = opp();
-  if (plan === 'none') retirementPlan = opp('HIGH', 'no retirement plan through the business');
-  else if (plan === 'ira') retirementPlan = opp('HIGH', 'mainly a personal IRA, no business plan');
-  else if (plan === 'unsure') retirementPlan = opp('MEDIUM', "possible: not sure what the business has");
-  // Added: a plan isn't an opportunity by itself, but $75k+ of idle cash next to it is a reason to look
-  else if (plan !== 'cashBalance' && someCash && cash.level !== 'LOW/MEDIUM')
+  if (plan('none')) retirementPlan = opp('HIGH', 'nothing set up for retirement right now');
+  else if (plan('unsure')) retirementPlan = opp('HIGH', "not sure what they're using for retirement");
+  else if (iraOnly) retirementPlan = opp('HIGH', 'personal IRA only, no business plan');
+  else if (sepSimpleOnly) retirementPlan = opp('MEDIUM', sepSimpleText + ' only, no 401(k)-type plan');
+  // Added: a 401(k)-type plan isn't an opportunity by itself, but $75k+ of idle cash next to it is a reason to look
+  else if (has401kType && !plan('cashBalance') && someCash && cash.level !== 'LOW/MEDIUM')
     retirementPlan = opp('MEDIUM', 'has a plan, but ' + cash.text + ' extra cash sits idle');
 
   // ---------- 401(k) review (Q5 follow-up) ----------
@@ -84,8 +89,8 @@ window.LEAD_SCORING = function (a) {
     never: ['HIGH', 'never independently reviewed'],
     unknown: ['HIGH', "doesn't know when it was last reviewed"],
   };
-  const has401k = plan === 'company401k' || plan === 'cashBalance';
-  const review = has401k && REVIEW[a.key('planReview')] ? opp(...REVIEW[a.key('planReview')]) : opp();
+  // Only asked when they ticked Company 401(k), so a blank answer means it doesn't apply
+  const review = REVIEW[a.key('planReview')] ? opp(...REVIEW[a.key('planReview')]) : opp();
 
   // ---------- Money in motion (Q8) ----------
   const mimWhy = [];
@@ -125,8 +130,8 @@ window.LEAD_SCORING = function (a) {
   const small = [];
   if (conc === 'unsure') small.push('unsure how much is tied up in the business');
   if (a.key('cashUse') === 'distributions' || a.key('cashUse') === 'accumulates') small.push('no system for extra cash');
-  if (plan === 'ira' || plan === 'none') small.push('no business retirement plan');
-  if (plan === 'unsure') small.push('unsure of their retirement setup');
+  if (iraOnly || plan('none')) small.push('no business retirement plan');
+  if (plan('unsure')) small.push('unsure of their retirement setup');
   if (sale === 'important') small.push('counting on a sale');
   if (sale === 'neverThought') small.push("hasn't thought about selling");
   if (ch('expand')) small.push('buying or expanding a business');
@@ -160,11 +165,11 @@ window.LEAD_SCORING = function (a) {
   } else if (
     aumLevel !== 'LOW' ||
     realPlanningNeed ||
-    isHigh(retirementPlan) ||
+    retirementPlan.level || // IRA-only / nothing / not sure, or SEP/SIMPLE only
     exit.level ||
     moneyInMotion.level ||
     someCash ||
-    plan === 'cashBalance' ||
+    plan('cashBalance') ||
     review.level === 'MEDIUM'
   ) {
     priority = 'B';
@@ -178,14 +183,20 @@ window.LEAD_SCORING = function (a) {
   add(isHigh(aum), aum.why, mgmt.lead);
   add(bigCash, cash && cash.text + ' excess business cash + no defined strategy', 'business liquidity / excess cash planning');
   add(isHigh(review), 'company 401(k) ' + review.why, 'a 401(k) fee, investment and plan-design review');
-  add(isHigh(retirementPlan), plan === 'ira' ? 'IRA only + no business retirement plan' : 'no business retirement plan', 'business retirement-plan review');
+  add(isHigh(retirementPlan), retirementPlan.why, 'business retirement-plan review');
   add(ch('retire'), 'retiring or cutting back within 3–5 years', 'retirement income and timing');
   add(ch('inheritance'), 'inheritance or large sum expected', 'a plan for the incoming money');
   add(aumLevel === 'MEDIUM', aum.why, mgmt.lead);
   add(!!bigGap, bigGap, 'retirement target and wealth-outside-the-business planning');
   add(someCash && !bigCash, cash && cash.text + ' excess business cash, no set plan', 'excess cash planning');
   add(!!exit.level, exit.why, 'exit planning');
-  add(small.length > 0, small[0], 'the question they picked');
+  add(sepSimpleOnly, sepSimpleText + ' only, no 401(k)-type plan', 'whether a different retirement setup fits better');
+  // Skip smaller items that just repeat a retirement-plan or cash point already made above
+  const covered = [];
+  if (retirementPlan.level) covered.push('no business retirement plan', 'unsure of their retirement setup');
+  if (cash) covered.push('no system for extra cash');
+  const smallFact = small.find((s) => !covered.includes(s));
+  add(!!smallFact, smallFact, 'the question they picked');
 
   let angle;
   if (signals.length) {

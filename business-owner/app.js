@@ -11,7 +11,7 @@
 
   const A = window.ASSESSMENT;
   const S = window.SETTINGS || {};
-  const advisor = S.advisor || {};
+  const advisor = Object.assign({}, S.advisor, A.advisor); // config.js `advisor` overrides settings.js for this checkup only
   const app = document.getElementById('app');
   const params = new URLSearchParams(window.location.search);
 
@@ -46,8 +46,9 @@
   // A follow-up question is only shown if its earlier question got one of the listed answers.
   function isShown(q) {
     if (!q.showIf) return true;
-    const opt = picked(byId[q.showIf.question]);
-    return !!opt && q.showIf.answers.includes(opt.key);
+    const parent = byId[q.showIf.question];
+    const opts = parent.type === 'multi' ? pickedMany(parent) : [picked(parent)];
+    return opts.some((o) => o && q.showIf.answers.includes(o.key));
   }
 
   // The answer picked on a one-answer question (undefined if unanswered or not shown)
@@ -319,8 +320,13 @@
     const R = A.results;
     const rows = [];
     questions.forEach((q) => {
-      const opt = q.category && picked(q);
-      if (opt) rows.push({ q, opt, points: opt.points || 0, max: Math.max(...q.options.map((o) => o.points || 0)) });
+      if (!q.category) return;
+      const opts = q.type === 'multi' ? pickedMany(q) : [picked(q)].filter(Boolean);
+      if (!opts.length) return;
+      // Pick-all-that-apply questions score their single best answer. Points are never added together.
+      const best = opts.reduce((a, b) => ((b.points || 0) > (a.points || 0) ? b : a));
+      const opt = opts.length > 1 ? Object.assign({}, best, { label: opts.map((o) => o.label).join(', ') }) : best;
+      rows.push({ q, opt, points: best.points || 0, max: Math.max(...q.options.map((o) => o.points || 0)) });
     });
 
     const total = rows.reduce((n, row) => n + row.points, 0);
