@@ -78,6 +78,7 @@ Use `?name=` for everyone you message personally. It makes the page feel like it
 - **Focus 1–3**: the areas their results flagged. Lead with these when you follow up.
 - **Top question**: what they most want answered. This is also good material for Facebook posts.
 - **Status, Contacted?, Meeting booked?, Est. AUM, Notes**: these columns are for you to fill in by hand.
+- **Activity tab:** one row per visit, including people who never finish. **Furthest step** is the last screen they reached ("Opened (intro page)", "Question 4 of 9: ...", "Last step", "Finished"), so a row stuck at Question 4 means they saw Question 4 and left. **Name (from link)** fills in only when you sent a `?name=` link. Only progress is recorded, never their answers. A refresh counts as the same visit; opening the link again later counts as a new one. A blank-name "Opened" row on a Computer can be an email security scanner checking the link. To turn this off, add `trackVisits: false,` to `settings.js`.
 - **Email alerts:** you get an email for every submission. To get emails only for people who want follow-up, change `EMAIL_ON` at the top of the Apps Script to `'followup'` and deploy a new version (see Step 2 note).
 
 ---
@@ -115,6 +116,7 @@ How it differs from the pool checkup:
 ---
 
 ## Changelog
+- **2026-10-14**: Added visit tracking to both checkups: the new **Activity** tab shows who opened a checkup and how far they got. Apps Script updated (needs a new deployment version).
 - **2026-10-08**: Business Owner Q5 is now pick-all-that-apply ("Which of these are you currently using for retirement?"), scored by the single best answer.
 - **2026-10-08**: Contact email on both checkups' results pages changed to cam@trelliswm.com (`settings.js`).
 - **2026-10-08**: Added the Business Owner checkup in `business-owner/`: 9 questions plus 2 follow-ups, a 0–100 score, private lead scoring and a follow-up angle. No shared files changed.
