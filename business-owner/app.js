@@ -107,6 +107,7 @@
     window.scrollTo(0, 0);
     const target = app.querySelector('[data-focus]');
     if (target && state.step >= 0) target.focus({ preventScroll: true });
+    trackVisit();
   }
 
   function topbar() {
@@ -420,6 +421,61 @@
       }).catch((err) => console.warn('[checkup] Could not save', err));
     } catch (err) {
       console.warn('[checkup] Could not save', err);
+    }
+  }
+
+  // ---------- visit tracking ----------
+  // Tells the Sheet's Activity tab how far this visit got, so you can see who opened it and
+  // where people stop. Only the screen they reached is sent, never their answers.
+  // Turn off with trackVisits: false in settings.js.
+  const visit = { id: visitId(), furthest: -1 };
+
+  function visitId() {
+    const make = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    try {
+      const key = 'checkup-visit-' + A.id; // a page refresh counts as the same visit
+      const id = sessionStorage.getItem(key) || make();
+      sessionStorage.setItem(key, id);
+      return id;
+    } catch (err) {
+      return make();
+    }
+  }
+
+  // [step number, label]. Step numbers only go up as they move forward.
+  function visitStep() {
+    if (state.step < 0) return [0, 'Opened (intro page)'];
+    if (state.step === CONTACT) return [mainCount + 1, 'Last step (name + follow-up)'];
+    if (state.step === RESULTS) return [mainCount + 2, 'Finished'];
+    const q = current();
+    const n = questions.slice(0, state.step + 1).filter((x) => !x.showIf).length;
+    return [n + (q.showIf ? 0.5 : 0), `Question ${n} of ${mainCount}: ${q.short.replace(/^Q\d+\s+/, '')}`];
+  }
+
+  function trackVisit() {
+    try {
+      if (!S.endpoint || S.trackVisits === false) return;
+      const [num, label] = visitStep();
+      if (num <= visit.furthest) return; // only report new ground, not going Back and forward again
+      visit.furthest = num;
+      fetch(S.endpoint, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          Event: 'visit',
+          Assessment: A.id,
+          'Visit ID': visit.id,
+          Name: urlName,
+          Source: state.source,
+          Step: label,
+          'Step #': num,
+          Device: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'Phone' : 'Computer',
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (err) {
+      // tracking must never get in the way of the checkup
     }
   }
 
